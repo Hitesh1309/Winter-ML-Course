@@ -1,0 +1,73 @@
+#function to do PCA with given number of components
+def doPCA(n):
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=n)
+    pca.fit(X_train)
+    X_train_pca = pca.transform(X_train)
+    X_test_pca = pca.transform(X_test)
+    return X_train_pca, X_test_pca
+
+# doing pca with 5 components
+X_train_pca, X_test_pca = doPCA(5)
+
+# plot the eigen faces
+print("\nPlotting the Eigen Faces")
+fig, ax = plt.subplots(1, 5, figsize=(20, 5))
+for i in range(5):
+    ax[i].imshow(pca.components_[i].reshape(256, 256), cmap='gray')
+    ax[i].set_title('Eigenface ' + str(i+1))
+plt.show()
+
+# split the code block here
+
+# plot the first 10 images before PCA
+print("\nPlotting the first 10 images before PCA")
+fig, ax = plt.subplots(2, 5, figsize=(20, 10))
+for i in range(10):
+    ax[i//5, i%5].imshow(X_train.iloc[i].values.reshape(256, 256), cmap='gray')
+    ax[i//5, i%5].set_title(y_train.iloc[i]['character'])
+plt.show()
+
+# plot the first 10 images after PCA
+print("\nPlotting the first 10 images after PCA")
+fig, ax = plt.subplots(2, 5, figsize=(20, 5))
+for i in range(10):
+    ax[i//5, i%5].imshow(X_train_pca[i].reshape(1, 5), cmap='gray')
+    ax[i//5, i%5].set_title(y_train.iloc[i]['character'])
+plt.show()
+
+# plot the cumulative explained variance ratio
+print("\nPlotting the cumulative explained variance ratio")
+plt.plot(np.cumsum(pca.explained_variance_ratio_))
+plt.xlabel('number of components')
+plt.ylabel('cumulative explained variance')
+plt.show()
+
+# split the code block here
+
+# 1-NN classifier
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(X_train_pca, y_train.values.ravel())
+print("\nAccuracy Score is : {:.2f}\n".format(knn.score(X_test_pca, y_test)))
+
+# predict on test set
+y_pred = knn.predict(X_test_pca)
+
+# print confusion matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+# print(cm)
+
+# print classification report
+from sklearn.metrics import classification_report
+print("\nThe Classification Report is : \n",classification_report(y_test, y_pred))
+
+# plot confusion matrix
+import seaborn as sns
+plt.figure(figsize=(5, 5))
+sns.heatmap(cm, annot=True, fmt="d")
+plt.title("Confusion matrix")
+plt.ylabel('True label')
+plt.xlabel('Predicted label')
+plt.show()
